@@ -1,0 +1,224 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>ApplyColorCalibrationMatrixCustomized</title><meta name="generator" content="MATLAB 9.8"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2020-08-21"><meta name="DC.source" content="ApplyColorCalibrationMatrixCustomized.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#3">set parameters</a></li><li><a href="#4">load calibration matrix</a></li><li><a href="#5">segmenttize the sensor area and apply CCM based on area</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> [Results] = ApplyColorCalibrationMatrixCustomized(Image,Parameters)
+</pre><pre class="codeinput"><span class="comment">%{
+</span><span class="comment">Input: Corrected image, calibration matrix
+</span><span class="comment">calibration matrix format:
+</span><span class="comment">
+</span><span class="comment">Hlimit_L_deg    Hlimit_H_deg    Vlimit_L_deg    Vlimit_H_deg    Cal_H_deg    Cal_V_deg      X11          X12           X13         Y11         Y12          Y13            Z11           Z12         Z13
+</span><span class="comment">    ____________    ____________    ____________    ____________    _________    _________    ________    __________    _________    ________    ________    __________    ___________    _________    ________
+</span><span class="comment">
+</span><span class="comment">         -5              5                -5              5             0            0        0.057974      0.012034     0.019673    0.015262    0.065893     -0.011295    -0.00083928    -0.033661     0.15567
+</span><span class="comment">         -2              2                 8             18             0           14        0.050033       0.01046     0.017109    0.013105    0.055865    -0.0091316     -0.0002807     -0.02827     0.13239
+</span><span class="comment">         -2              2              18.1             28             0           24        0.040144     0.0070043     0.014327    0.010471    0.042407     -0.006081      0.0006201    -0.022961     0.10402
+</span><span class="comment">         -2              2              28.1             40             0           34        0.039783    0.00029439     0.013752    0.012343    0.031034    -0.0035767      0.0050007    -0.024587    0.090246
+</span><span class="comment">         -2              2              40.1             50             0           46        0.036788    -0.0022621    0.0090691    0.015318    0.018554     -0.002357       0.012972    -0.019273    -4.93951
+</span><span class="comment">
+</span><span class="comment">Output: CIE1931x,CIE1931y,Y
+</span><span class="comment">Author:Monirul, 08/04/2020
+</span><span class="comment">
+</span><span class="comment">%}
+</span><span class="comment">%TODO- Add dynamic logic to reduce CCMs</span>
+</pre><h2 id="3">set parameters</h2><pre class="codeinput">ColorCalibrationFileLocation=Parameters.CalibrationFileLocation;
+Filename=Parameters.ColorCalFilename;
+bShowPlot=Parameters.bShowPlot;
+HorizontalFOV=Parameters.HorizontalFOV;
+VerticalFOV=Parameters.VerticalFOV;
+HorizontalAngle=Parameters.HorizontalAngle;
+VerticalAngle=Parameters.VerticalAngle;
+</pre><pre class="codeoutput error">Not enough input arguments.
+
+Error in ApplyColorCalibrationMatrixCustomized (line 22)
+ColorCalibrationFileLocation=Parameters.CalibrationFileLocation;
+</pre><h2 id="4">load calibration matrix</h2><pre class="codeinput">strFilename = sprintf(<span class="string">'%s%s'</span>,ColorCalibrationFileLocation,Filename);
+load(strFilename);   <span class="comment">% variable name: ColorCalibrationMatrix</span>
+</pre><h2 id="5">segmenttize the sensor area and apply CCM based on area</h2><pre class="codeinput"><span class="comment">%{
+</span><span class="comment">Need to choose sensor area based on CCMs performance
+</span><span class="comment">Area of each CCM could be circular/square
+</span><span class="comment">Based on that, algorithm needs to change.
+</span><span class="comment">Initial code is written based on available horizontal and vertical data
+</span><span class="comment">with arbitery area serve by each CCM.
+</span><span class="comment">%}
+</span>
+<span class="comment">%Traverse Horizontal and vertical Angles</span>
+
+CenterH=size(Image,2)/2; <span class="comment">% if optoical axis and image center position is not same, need to set appropiate value</span>
+CenterV=size(Image,1)/2;
+
+ConvertPixel2Degree_H=size(Image,2)/HorizontalFOV;
+ConvertPixel2Degree_V=size(Image,1)/VerticalFOV;
+
+<span class="comment">% Results=Image*0;</span>
+
+
+<span class="comment">% current H &amp; V angle on the image plane</span>
+h=round(CenterH+(HorizontalAngle*ConvertPixel2Degree_H));
+v=round(CenterV+(VerticalAngle*ConvertPixel2Degree_V));
+<span class="comment">% HorizontalAngle=(h-CenterH)/ConvertPixel2Degree_H;</span>
+<span class="comment">% VerticalAngle=(v-CenterV)/ConvertPixel2Degree_V;</span>
+
+<span class="comment">% Find CCM corresponding to Horizontal and vertical angle</span>
+Index = find(HorizontalAngle&gt;=ColorCalibrationMatrix.Hlimit_L_deg  &amp; HorizontalAngle&lt;=ColorCalibrationMatrix.Hlimit_H_deg <span class="keyword">...</span>
+    &amp; VerticalAngle&gt;=ColorCalibrationMatrix.Vlimit_L_deg &amp; VerticalAngle&lt;=ColorCalibrationMatrix.Vlimit_H_deg);
+
+CalMatrix=ColorCalibrationMatrix{Index,{ <span class="string">'X11'</span>, <span class="string">'X12'</span>, <span class="string">'X13'</span>, <span class="string">'Y11'</span>, <span class="string">'Y12'</span>, <span class="string">'Y13'</span>, <span class="string">'Z11'</span>,<span class="string">'Z12'</span>,<span class="string">'Z13'</span>}};
+
+<span class="comment">%find corresponding RGB</span>
+R=Image(v,h,1); G=Image(v,h,2); B=Image(v,h,3);
+<span class="comment">%calculate color info</span>
+[x,y,Y] = CalculateColorValue(CalMatrix,R,G,B);
+
+<span class="comment">% store the color info</span>
+Results(1)=x;
+Results(2)=y;
+Results(3)=Y;
+</pre><pre class="codeinput"><span class="keyword">end</span>
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2020a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function [Results] = ApplyColorCalibrationMatrixCustomized(Image,Parameters)
+
+%{
+Input: Corrected image, calibration matrix
+calibration matrix format:
+
+Hlimit_L_deg    Hlimit_H_deg    Vlimit_L_deg    Vlimit_H_deg    Cal_H_deg    Cal_V_deg      X11          X12           X13         Y11         Y12          Y13            Z11           Z12         Z13
+    ____________    ____________    ____________    ____________    _________    _________    ________    __________    _________    ________    ________    __________    ___________    _________    ________
+
+         -5              5                -5              5             0            0        0.057974      0.012034     0.019673    0.015262    0.065893     -0.011295    -0.00083928    -0.033661     0.15567
+         -2              2                 8             18             0           14        0.050033       0.01046     0.017109    0.013105    0.055865    -0.0091316     -0.0002807     -0.02827     0.13239
+         -2              2              18.1             28             0           24        0.040144     0.0070043     0.014327    0.010471    0.042407     -0.006081      0.0006201    -0.022961     0.10402
+         -2              2              28.1             40             0           34        0.039783    0.00029439     0.013752    0.012343    0.031034    -0.0035767      0.0050007    -0.024587    0.090246
+         -2              2              40.1             50             0           46        0.036788    -0.0022621    0.0090691    0.015318    0.018554     -0.002357       0.012972    -0.019273    -4.93951
+ 
+Output: CIE1931x,CIE1931y,Y
+Author:Monirul, 08/04/2020
+
+%}
+%TODO- Add dynamic logic to reduce CCMs
+%% set parameters
+ColorCalibrationFileLocation=Parameters.CalibrationFileLocation;
+Filename=Parameters.ColorCalFilename;
+bShowPlot=Parameters.bShowPlot;
+HorizontalFOV=Parameters.HorizontalFOV;
+VerticalFOV=Parameters.VerticalFOV;
+HorizontalAngle=Parameters.HorizontalAngle;
+VerticalAngle=Parameters.VerticalAngle;
+%% load calibration matrix
+strFilename = sprintf('%s%s',ColorCalibrationFileLocation,Filename);
+load(strFilename);   % variable name: ColorCalibrationMatrix
+%% segmenttize the sensor area and apply CCM based on area
+%{
+Need to choose sensor area based on CCMs performance
+Area of each CCM could be circular/square
+Based on that, algorithm needs to change.
+Initial code is written based on available horizontal and vertical data
+with arbitery area serve by each CCM.
+%}
+
+%Traverse Horizontal and vertical Angles
+
+CenterH=size(Image,2)/2; % if optoical axis and image center position is not same, need to set appropiate value
+CenterV=size(Image,1)/2;
+
+ConvertPixel2Degree_H=size(Image,2)/HorizontalFOV;
+ConvertPixel2Degree_V=size(Image,1)/VerticalFOV;
+
+% Results=Image*0;
+
+
+% current H & V angle on the image plane
+h=round(CenterH+(HorizontalAngle*ConvertPixel2Degree_H));
+v=round(CenterV+(VerticalAngle*ConvertPixel2Degree_V));
+% HorizontalAngle=(h-CenterH)/ConvertPixel2Degree_H;
+% VerticalAngle=(v-CenterV)/ConvertPixel2Degree_V;
+
+% Find CCM corresponding to Horizontal and vertical angle
+Index = find(HorizontalAngle>=ColorCalibrationMatrix.Hlimit_L_deg  & HorizontalAngle<=ColorCalibrationMatrix.Hlimit_H_deg ...
+    & VerticalAngle>=ColorCalibrationMatrix.Vlimit_L_deg & VerticalAngle<=ColorCalibrationMatrix.Vlimit_H_deg);
+
+CalMatrix=ColorCalibrationMatrix{Index,{ 'X11', 'X12', 'X13', 'Y11', 'Y12', 'Y13', 'Z11','Z12','Z13'}};
+
+%find corresponding RGB
+R=Image(v,h,1); G=Image(v,h,2); B=Image(v,h,3);
+%calculate color info
+[x,y,Y] = CalculateColorValue(CalMatrix,R,G,B);
+
+% store the color info
+Results(1)=x;
+Results(2)=y;
+Results(3)=Y;
+
+end
+
+
+
+
+##### SOURCE END #####
+--></body></html>

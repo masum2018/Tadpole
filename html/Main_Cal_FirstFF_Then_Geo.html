@@ -1,0 +1,357 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Main_Cal_FirstFF_Then_Geo</title><meta name="generator" content="MATLAB 9.8"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2020-08-21"><meta name="DC.source" content="Main_Cal_FirstFF_Then_Geo.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Software flow</a></li><li><a href="#3">Environment setting</a></li><li><a href="#4">Set parameters</a></li><li><a href="#5">Input: Raw TIFF image(Image_r)</a></li><li><a href="#6">Step1:Dark noise correction(Image_rd)</a></li><li><a href="#7">Step2:Flatfield Correction(Image_rdgf)</a></li><li><a href="#8">Step3: Geometric Correction(Image_rdg)</a></li><li><a href="#9">Step4:Binning on Image(Image_rdgfb)</a></li><li><a href="#10">Step5:Apply Color Cal (Image_rdgfbc)</a></li><li><a href="#11">Step6:Save and show results</a></li></ul></div><pre class="codeinput"><span class="comment">%Monirul, July,2020</span>
+<span class="comment">%Apply all calibrations on Raw image</span>
+</pre><h2 id="2">Software flow</h2><pre class="codeinput"><span class="comment">%{
+</span><span class="comment">%   Steps in the code
+</span><span class="comment">%   Input: Raw TIFF image(Image_r)
+</span><span class="comment">%        a.Dead/Hot pixel corrected(from loaded bin file)
+</span><span class="comment">%        b.Demosaicing  (Separate R, G and B layers- 3x65MP pixels)
+</span><span class="comment">%   Step1:Dark noise correction(Image_rd)
+</span><span class="comment">%   Step2: Geometric Correction(Image_rdg)
+</span><span class="comment">%        a.Calibration file has the mapping coordinate(x,y) of distorted and corrected image
+</span><span class="comment">%        b.Fill the gap in the corrected image by nearest neighbor pixels
+</span><span class="comment">%  Step3:Flatfield Correction(Image_rdgf)
+</span><span class="comment">%       A TIFF image(taken from RS-6) is used as a calibration source
+</span><span class="comment">%  Step4:Binning on Image(Image_rdgfb)
+</span><span class="comment">%       a.Binning is required to reduce the noise
+</span><span class="comment">%
+</span><span class="comment">%  Step5:Apply Color Cal (Image_rdgfbc)
+</span><span class="comment">%       Different color calibration matrix on different spatial location
+</span><span class="comment">
+</span><span class="comment">% Folder Structure
+</span><span class="comment">%      A12345678 - Calibration Files- all calibration files
+</span><span class="comment">%                -Output files
+</span><span class="comment">%                -Raw Images
+</span><span class="comment">
+</span><span class="comment">%  Parameters Note:
+</span><span class="comment">%     1. Any variable start with b is binary number. Value is either 0 or 1.
+</span><span class="comment">%     2. Any variable start with n is interger number.
+</span><span class="comment">%}</span>
+</pre><h2 id="3">Environment setting</h2><pre class="codeinput">close <span class="string">all</span>;clear;close <span class="string">all</span>;
+set(0,<span class="string">'defaultfigurecolor'</span>,[1 1 1]);
+set(0,<span class="string">'defaultAxesXLimSpec'</span>, <span class="string">'tight'</span>);
+tic;
+</pre><h2 id="4">Set parameters</h2><pre class="codeinput"><span class="comment">%Customized running for specific angle</span>
+Parameters.HorizontalAngle=46;
+Parameters.VerticalAngle=0;
+Parameters.nNumberOfImagesBeAveraged=1; <span class="comment">% How many images to be averaged?</span>
+Parameters.bDemosaicing=1;            <span class="comment">% For .tiff image,bDemosaicing=1 and for .raw image, set bDemosaicing=0</span>
+Parameters.nBinningSizeRow=128;        <span class="comment">% binning size</span>
+Parameters.nBinningSizeColumn=128;
+Parameters.nImage_width=9344;         <span class="comment">%Basic image info for 65MP sensor</span>
+Parameters.nImage_height=7000;
+Parameters.FlatfieldROIx=50;          <span class="comment">% Flatfield gain</span>
+Parameters.FlatfieldROIy=50;
+Parameters.CroppedRowRange=951:5850;  <span class="comment">% Crop image from the 65MP sensor</span>
+Parameters.CroppedColumnRange=1001:8350;
+<span class="comment">% file locations</span>
+Parameters.RawImagesFilesLocation=<span class="string">'C:\Gamma\65MP\A12345678\Raw Images\'</span>;
+Parameters.DarkImagesFilesLocation=<span class="string">'C:\Gamma\65MP\A12345678\Dark Images\'</span>;
+Parameters.CalibrationFileLocation=<span class="string">'C:\Gamma\65MP\A12345678\Calibration Files\'</span>;
+Parameters.OutputFileLocation=<span class="string">'C:\Gamma\65MP\A12345678\Output Files\'</span>;
+<span class="comment">%calibration file name</span>
+Parameters.DeadHotPixelsCalFilename=<span class="string">'DeadAndHotPixelsList.mat'</span>;
+Parameters.GeometricFilename=<span class="string">'GeometricCorrectionFile.mat'</span>;
+Parameters.FlatfieldFilename=<span class="string">'FlatfieldCalibrationImage.mat'</span>;
+Parameters.ColorCalFilename=<span class="string">'ColorCalibrationMatrix.mat'</span>;
+
+<span class="comment">%LMD specific info</span>
+Parameters.HorizontalFOV=120;
+Parameters.VerticalFOV=80;
+<span class="comment">%save results</span>
+Parameters.CIE1931_x=[];
+Parameters.CIE1931_y=[];
+Parameters.TristimulusY=[];
+Parameters.bShowPlot=  [1,<span class="keyword">...</span><span class="comment">   %Image_r/Image_d</span>
+                        1,<span class="keyword">...</span><span class="comment">   %Image_rd</span>
+                        1,<span class="keyword">...</span><span class="comment">   %Image_rd with defect pixels correction</span>
+                        0,<span class="keyword">...</span><span class="comment">   %Image_rdfg</span>
+                        1,<span class="keyword">...</span><span class="comment">   %Image_rdf</span>
+                        0,<span class="keyword">...</span><span class="comment">   %Image_rdfgb</span>
+                        0,<span class="keyword">...</span><span class="comment">   %Image_rdgfbc</span>
+                        1];     <span class="comment">%final results</span>
+
+<span class="comment">%  TODO Basic info</span>
+Parameters.temp = <span class="string">'31&deg;C'</span>;
+Parameters.exposure_time = <span class="string">'23 ms'</span>;
+Parameters.SN = <span class="string">'A12345678'</span>;
+Parameters.ImageFormat = <span class="string">'.tiff'</span>;
+Parameters.DeviceType = <span class="string">'VR'</span>;
+Parameters.DeviceName = <span class="string">'FlatPanel'</span>;
+Parameters.DeviceGrade = <span class="string">'A'</span>;
+Parameters.Orientation = <span class="string">'Upside Down'</span>;
+Parameters.DeviceSerialNumber = <span class="string">'A987654321'</span>;
+Parameters.Comments = <span class="string">'Initial Testing'</span>;
+Parameters.PRNU = <span class="string">'0.31423'</span>;
+Parameters.DSNU = <span class="string">'12'</span>;
+<span class="comment">% log file</span>
+Parameters.LogFileLocation=<span class="string">'C:\Gamma\65MP\A12345678\Log Files\'</span>;
+Parameters.LogFilename = <span class="string">'Log.txt'</span>;
+Parameters.LogON = 1;             <span class="comment">% set True=any positive number, False=0;</span>
+</pre><h2 id="5">Input: Raw TIFF image(Image_r)</h2><pre class="codeinput">Image_r= ReadImages(Parameters,<span class="string">'Raw'</span>);
+Image_d= ReadImages(Parameters,<span class="string">'Dark'</span>);
+Image_r=Image_r(Parameters.CroppedRowRange,Parameters.CroppedColumnRange,:);
+Image_d=Image_d(Parameters.CroppedRowRange,Parameters.CroppedColumnRange,:);
+
+figure,plot(Image_r(:, 4668,1));
+figure,plot(Image_r(:, 4668,2));
+figure,plot(Image_r(:, 4668,3));
+figure,imagesc(Image_r(:,:,1));axis <span class="string">equal</span>;
+figure,imagesc(Image_r(:,:,2));axis <span class="string">equal</span>;
+figure,imagesc(Image_r(:,:,3));axis <span class="string">equal</span>;
+</pre><pre class="codeoutput">C:\Gamma\65MP\A12345678\Raw Images\data001.tiff
+</pre><pre class="codeoutput error">Index in position 3 exceeds array bounds (must not exceed 1).
+
+Error in ReadImages (line 69)
+    PlotLines(AveragedImage(:,:,1),AveragedImage(:,:,2),AveragedImage(:,:,3),TitleOfTheImage);
+
+Error in Main_Cal_FirstFF_Then_Geo (line 95)
+Image_d= ReadImages(Parameters,'Dark');
+</pre><h2 id="6">Step1:Dark noise correction(Image_rd)</h2><pre class="codeinput">[Image_rd] = DarkNoiseCorrection(Image_r,Image_d,Parameters,<span class="string">'Dark Noise Corrected'</span>);
+clear <span class="string">Image_r</span>;
+<span class="comment">% correct hot/dead pixels</span>
+[Image_rd] = CorrectForDeadAndHotPixels(Image_rd,Parameters);
+toc;
+</pre><h2 id="7">Step2:Flatfield Correction(Image_rdgf)</h2><pre class="codeinput">[Image_rdf] = FlatFieldCorrection(Image_rd,Image_d,Parameters);
+<span class="comment">% clear Image_d Image_rdg;</span>
+toc;
+</pre><h2 id="8">Step3: Geometric Correction(Image_rdg)</h2><pre class="codeinput">[Image_rdfg] = GeometricCorrection(Image_rdf,Parameters);
+clear <span class="string">Image_rd</span>;
+toc;
+</pre><h2 id="9">Step4:Binning on Image(Image_rdgfb)</h2><pre class="codeinput">[Image_rdfgb] = Binning(Image_rdf,Parameters);
+clear <span class="string">Image_rdfg</span>;
+toc
+</pre><h2 id="10">Step5:Apply Color Cal (Image_rdgfbc)</h2><pre class="codeinput">[Result] = ApplyColorCalibrationMatrixCustomized(Image_rdfgb,Parameters);
+clear <span class="string">Image_rdgfb</span>;
+<span class="comment">% Parameters.CIE1931_x=Result(:,:,1);</span>
+<span class="comment">% Parameters.CIE1931_y=Result(:,:,2);</span>
+<span class="comment">% Parameters.TristimulusY=Result(:,:,3);</span>
+
+Parameters.CIE1931_x=Result(1);
+Parameters.CIE1931_y=Result(2);
+Parameters.TristimulusY=Result(3);
+toc;
+</pre><h2 id="11">Step6:Save and show results</h2><p>if(Parameters.bShowPlot(7))     figure, imagesc(Result(:,:,1)); title('1931_x');     figure, imagesc(Result(:,:,2)); title('1931_y');     figure, imagesc(Result(:,:,3)); title('Y');</p><p>end save result and parameters</p><pre class="codeinput">SaveResults(Parameters);
+disp(<span class="string">'Results are saved!!!'</span>)
+toc;
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2020a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%Monirul, July,2020
+%Apply all calibrations on Raw image
+%% Software flow
+%{
+%   Steps in the code
+%   Input: Raw TIFF image(Image_r)
+%        a.Dead/Hot pixel corrected(from loaded bin file)
+%        b.Demosaicing  (Separate R, G and B layers- 3x65MP pixels)
+%   Step1:Dark noise correction(Image_rd)
+%   Step2: Geometric Correction(Image_rdg)
+%        a.Calibration file has the mapping coordinate(x,y) of distorted and corrected image
+%        b.Fill the gap in the corrected image by nearest neighbor pixels
+%  Step3:Flatfield Correction(Image_rdgf)
+%       A TIFF image(taken from RS-6) is used as a calibration source
+%  Step4:Binning on Image(Image_rdgfb)
+%       a.Binning is required to reduce the noise
+%
+%  Step5:Apply Color Cal (Image_rdgfbc)
+%       Different color calibration matrix on different spatial location
+
+% Folder Structure
+%      A12345678 - Calibration Files- all calibration files
+%                -Output files
+%                -Raw Images
+
+%  Parameters Note:
+%     1. Any variable start with b is binary number. Value is either 0 or 1.
+%     2. Any variable start with n is interger number.
+%}
+%% Environment setting
+close all;clear;close all;
+set(0,'defaultfigurecolor',[1 1 1]);
+set(0,'defaultAxesXLimSpec', 'tight');
+tic;
+%% Set parameters 
+%Customized running for specific angle
+Parameters.HorizontalAngle=46;
+Parameters.VerticalAngle=0; 
+Parameters.nNumberOfImagesBeAveraged=1; % How many images to be averaged?
+Parameters.bDemosaicing=1;            % For .tiff image,bDemosaicing=1 and for .raw image, set bDemosaicing=0
+Parameters.nBinningSizeRow=128;        % binning size
+Parameters.nBinningSizeColumn=128;
+Parameters.nImage_width=9344;         %Basic image info for 65MP sensor
+Parameters.nImage_height=7000;
+Parameters.FlatfieldROIx=50;          % Flatfield gain
+Parameters.FlatfieldROIy=50;
+Parameters.CroppedRowRange=951:5850;  % Crop image from the 65MP sensor
+Parameters.CroppedColumnRange=1001:8350;
+% file locations
+Parameters.RawImagesFilesLocation='C:\Gamma\65MP\A12345678\Raw Images\';
+Parameters.DarkImagesFilesLocation='C:\Gamma\65MP\A12345678\Dark Images\';
+Parameters.CalibrationFileLocation='C:\Gamma\65MP\A12345678\Calibration Files\';
+Parameters.OutputFileLocation='C:\Gamma\65MP\A12345678\Output Files\';
+%calibration file name
+Parameters.DeadHotPixelsCalFilename='DeadAndHotPixelsList.mat';
+Parameters.GeometricFilename='GeometricCorrectionFile.mat';
+Parameters.FlatfieldFilename='FlatfieldCalibrationImage.mat';
+Parameters.ColorCalFilename='ColorCalibrationMatrix.mat';
+
+%LMD specific info
+Parameters.HorizontalFOV=120;
+Parameters.VerticalFOV=80;
+%save results
+Parameters.CIE1931_x=[];
+Parameters.CIE1931_y=[];
+Parameters.TristimulusY=[];
+Parameters.bShowPlot=  [1,...   %Image_r/Image_d
+                        1,...   %Image_rd
+                        1,...   %Image_rd with defect pixels correction
+                        0,...   %Image_rdfg
+                        1,...   %Image_rdf
+                        0,...   %Image_rdfgb
+                        0,...   %Image_rdgfbc
+                        1];     %final results
+
+%  TODO Basic info
+Parameters.temp = '31°C';
+Parameters.exposure_time = '23 ms';
+Parameters.SN = 'A12345678';
+Parameters.ImageFormat = '.tiff';
+Parameters.DeviceType = 'VR';
+Parameters.DeviceName = 'FlatPanel';
+Parameters.DeviceGrade = 'A';
+Parameters.Orientation = 'Upside Down';
+Parameters.DeviceSerialNumber = 'A987654321';
+Parameters.Comments = 'Initial Testing';
+Parameters.PRNU = '0.31423';
+Parameters.DSNU = '12';
+% log file
+Parameters.LogFileLocation='C:\Gamma\65MP\A12345678\Log Files\';
+Parameters.LogFilename = 'Log.txt';
+Parameters.LogON = 1;             % set True=any positive number, False=0;
+%% Input: Raw TIFF image(Image_r)
+Image_r= ReadImages(Parameters,'Raw');
+Image_d= ReadImages(Parameters,'Dark');
+Image_r=Image_r(Parameters.CroppedRowRange,Parameters.CroppedColumnRange,:);
+Image_d=Image_d(Parameters.CroppedRowRange,Parameters.CroppedColumnRange,:);
+
+figure,plot(Image_r(:, 4668,1));
+figure,plot(Image_r(:, 4668,2));
+figure,plot(Image_r(:, 4668,3));
+figure,imagesc(Image_r(:,:,1));axis equal;
+figure,imagesc(Image_r(:,:,2));axis equal;
+figure,imagesc(Image_r(:,:,3));axis equal;
+%% Step1:Dark noise correction(Image_rd)
+[Image_rd] = DarkNoiseCorrection(Image_r,Image_d,Parameters,'Dark Noise Corrected');
+clear Image_r;
+% correct hot/dead pixels
+[Image_rd] = CorrectForDeadAndHotPixels(Image_rd,Parameters);
+toc;
+
+%% Step2:Flatfield Correction(Image_rdgf)
+[Image_rdf] = FlatFieldCorrection(Image_rd,Image_d,Parameters);
+% clear Image_d Image_rdg;
+toc;
+
+%% Step3: Geometric Correction(Image_rdg)
+[Image_rdfg] = GeometricCorrection(Image_rdf,Parameters);
+clear Image_rd;
+toc;
+
+%% Step4:Binning on Image(Image_rdgfb)
+[Image_rdfgb] = Binning(Image_rdf,Parameters);
+clear Image_rdfg;
+toc
+%% Step5:Apply Color Cal (Image_rdgfbc)
+[Result] = ApplyColorCalibrationMatrixCustomized(Image_rdfgb,Parameters);
+clear Image_rdgfb;
+% Parameters.CIE1931_x=Result(:,:,1);
+% Parameters.CIE1931_y=Result(:,:,2);
+% Parameters.TristimulusY=Result(:,:,3);
+
+Parameters.CIE1931_x=Result(1);
+Parameters.CIE1931_y=Result(2);
+Parameters.TristimulusY=Result(3);
+toc;
+%% Step6:Save and show results
+% if(Parameters.bShowPlot(7))
+%     figure, imagesc(Result(:,:,1)); title('1931_x');
+%     figure, imagesc(Result(:,:,2)); title('1931_y');
+%     figure, imagesc(Result(:,:,3)); title('Y');
+%     
+% end
+% save result and parameters
+SaveResults(Parameters);
+disp('Results are saved!!!')
+toc;
+
+
+##### SOURCE END #####
+--></body></html>
